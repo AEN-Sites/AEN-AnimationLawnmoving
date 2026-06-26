@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenCut Pro – Precision Lawn Care</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g0:#04100A;--g1:#0A1F10;--g2:#122B18;--g3:#1A3A22;
+  --grass:#3DDB5A;--bright:#5FEF7A;--dim:#1E6B30;
+  --cream:#EEE9DC;--gold:#F2B233;--white:#fff;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--g0);color:var(--cream);font-family:'Inter',sans-serif;overflow-x:hidden;cursor:none}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;z-index:9999;background:var(--g0);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity 0.8s,visibility 0.8s}
+#loader.hide{opacity:0;visibility:hidden}
+.loader-logo{font-family:'Bebas Neue',sans-serif;font-size:4rem;letter-spacing:0.15em;color:var(--grass);opacity:0;animation:fadeIn 0.6s 0.3s forwards}
+.loader-bar-wrap{width:240px;height:2px;background:rgba(61,219,90,0.15);border-radius:2px;overflow:hidden}
+.loader-bar{height:100%;background:var(--grass);width:0%;border-radius:2px;transition:width 0.05s linear;box-shadow:0 0 12px var(--grass)}
+.loader-pct{font-size:0.75rem;letter-spacing:0.2em;color:rgba(61,219,90,0.5);opacity:0;animation:fadeIn 0.6s 0.5s forwards}
+@keyframes fadeIn{to{opacity:1}}
+
+/* ── CURSOR ── */
+#cur{position:fixed;z-index:9998;pointer-events:none;width:10px;height:10px;background:var(--grass);border-radius:50%;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .2s,height .2s,opacity .2s;box-shadow:0 0 10px var(--grass),0 0 30px rgba(61,219,90,.3)}
+#cur-ring{position:fixed;z-index:9997;pointer-events:none;width:40px;height:40px;border:1px solid rgba(61,219,90,.4);border-radius:50%;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#cur-trail{position:fixed;z-index:9996;pointer-events:none;width:6px;height:6px;background:rgba(61,219,90,.3);border-radius:50%;transform:translate(-50%,-50%)}
+body.link-hover #cur{width:18px;height:18px}
+body.link-hover #cur-ring{width:56px;height:56px;border-color:rgba(61,219,90,.7)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 60px;display:flex;align-items:center;justify-content:space-between;transition:all .5s var(--ease)}
+nav::before{content:'';position:absolute;inset:0;background:rgba(4,16,10,0);backdrop-filter:blur(0px);transition:background .5s,backdrop-filter .5s}
+nav.stuck::before{background:rgba(4,16,10,.92);backdrop-filter:blur(20px)}
+nav.stuck{padding:14px 60px;border-bottom:1px solid rgba(61,219,90,.1)}
+.n-logo{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.12em;color:var(--cream);text-decoration:none;position:relative;z-index:1}
+.n-logo em{color:var(--grass);font-style:normal}
+.n-links{display:flex;gap:40px;list-style:none;position:relative;z-index:1}
+.n-links a{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(238,233,220,.5);text-decoration:none;transition:color .25s;position:relative;font-weight:500}
+.n-links a::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:1px;background:var(--grass);transition:width .3s var(--ease)}
+.n-links a:hover{color:var(--cream)}
+.n-links a:hover::after{width:100%}
+.n-cta{position:relative;z-index:1;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g0);background:var(--grass);padding:11px 28px;border-radius:2px;text-decoration:none;overflow:hidden;display:inline-block;transition:transform .25s,box-shadow .25s}
+.n-cta::before{content:'';position:absolute;inset:0;background:var(--bright);transform:translateY(101%);transition:transform .35s var(--ease)}
+.n-cta span{position:relative;z-index:1}
+.n-cta:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(61,219,90,.5)}
+.n-cta:hover::before{transform:translateY(0)}
+
+/* ── HERO ── */
+#hero{position:relative;height:100vh;min-height:640px;overflow:hidden;display:flex;align-items:center}
+#three-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 50% 110%,rgba(61,219,90,.06),transparent),linear-gradient(to top,rgba(4,16,10,.85) 0%,rgba(4,16,10,.1) 60%,rgba(4,16,10,.6) 100%);z-index:1;pointer-events:none}
+.hero-content{position:relative;z-index:2;padding:0 60px;max-width:1400px;margin:0 auto;width:100%}
+.h-tag{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(61,219,90,.25);background:rgba(61,219,90,.06);padding:7px 18px;border-radius:100px;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grass);margin-bottom:32px;opacity:0;animation:riseIn .8s .8s var(--ease) forwards}
+.h-pulse{width:6px;height:6px;background:var(--grass);border-radius:50%;animation:pulse 2s infinite;box-shadow:0 0 8px var(--grass)}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(0.5);opacity:.4}}
+.h-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(5rem,13vw,14rem);line-height:.88;letter-spacing:.02em;margin-bottom:32px;overflow:hidden}
+.h-word{display:block;opacity:0;transform:translateY(100%) skewY(3deg);animation:wordIn .9s var(--ease) forwards}
+.h-word.green{color:var(--grass);text-shadow:0 0 80px rgba(61,219,90,.4),0 0 160px rgba(61,219,90,.15)}
+.w1{animation-delay:1s}.w2{animation-delay:1.12s}.w3{animation-delay:1.24s}.w4{animation-delay:1.36s}
+@keyframes wordIn{to{opacity:1;transform:translateY(0) skewY(0deg)}}
+@keyframes riseIn{to{opacity:1;transform:translateY(0)}}
+.h-sub{max-width:420px;font-size:1rem;line-height:1.75;color:rgba(238,233,220,.55);margin-bottom:48px;opacity:0;animation:riseIn .8s 1.6s var(--ease) forwards;transform:translateY(16px)}
+.h-btns{display:flex;gap:16px;flex-wrap:wrap;opacity:0;animation:riseIn .8s 1.75s var(--ease) forwards;transform:translateY(16px)}
+.btn-a{position:relative;display:inline-flex;align-items:center;gap:10px;padding:16px 42px;background:var(--grass);color:var(--g0);font-weight:800;font-size:.92rem;text-decoration:none;border-radius:2px;overflow:hidden;transition:transform .25s,box-shadow .25s;letter-spacing:.03em}
+.btn-a::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.25) 50%,transparent 100%);transform:translateX(-100%);transition:transform .5s}
+.btn-a:hover::before{transform:translateX(100%)}
+.btn-a:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(61,219,90,.55)}
+.btn-b{display:inline-flex;align-items:center;gap:10px;padding:16px 42px;border:1px solid rgba(238,233,220,.2);color:var(--cream);font-size:.92rem;text-decoration:none;border-radius:2px;transition:all .3s;letter-spacing:.03em}
+.btn-b:hover{background:rgba(238,233,220,.06);border-color:rgba(238,233,220,.5)}
+.h-stats{display:flex;gap:60px;margin-top:80px;padding-top:36px;border-top:1px solid rgba(238,233,220,.08);opacity:0;animation:riseIn .8s 2s var(--ease) forwards;transform:translateY(16px)}
+.stat-n{font-family:'Bebas Neue',sans-serif;font-size:3.2rem;line-height:1;color:var(--cream)}
+.stat-n em{color:var(--grass);font-style:normal}
+.stat-l{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(238,233,220,.35);margin-top:6px}
+.scroll-hint{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:riseIn 1s 2.5s forwards}
+.scroll-hint span{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(238,233,220,.25)}
+.scroll-mouse{width:22px;height:34px;border:1.5px solid rgba(238,233,220,.2);border-radius:11px;position:relative}
+.scroll-wheel{width:3px;height:6px;background:var(--grass);border-radius:2px;position:absolute;top:6px;left:50%;transform:translateX(-50%);animation:scrollW 2s ease-in-out infinite;box-shadow:0 0 6px var(--grass)}
+@keyframes scrollW{0%{opacity:1;top:6px}100%{opacity:0;top:20px}}
+
+/* ── MARQUEE ── */
+.marquee-wrap{background:var(--grass);padding:13px 0;overflow:hidden;position:relative}
+.marquee-track{display:flex;gap:0;white-space:nowrap;animation:mq 18s linear infinite}
+.marquee-track:hover{animation-play-state:paused}
+.m-item{display:inline-flex;align-items:center;gap:24px;padding:0 32px;font-size:.78rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--g0)}
+.m-sep{width:4px;height:4px;background:rgba(4,16,10,.3);border-radius:50%;flex-shrink:0}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── SERVICES HORIZONTAL ── */
+#services{padding:120px 0;overflow:hidden;background:var(--g0)}
+.svc-head{padding:0 60px;margin-bottom:64px}
+.eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--grass);margin-bottom:14px}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,6vw,5.5rem);line-height:.9;letter-spacing:.03em;margin-bottom:14px}
+.section-body{font-size:.92rem;color:rgba(238,233,220,.45);max-width:440px;line-height:1.75}
+.svc-track-wrap{overflow-x:auto;padding:0 60px 40px;scrollbar-width:thin;scrollbar-color:rgba(61,219,90,.3) transparent;cursor:grab}
+.svc-track-wrap:active{cursor:grabbing}
+.svc-track-wrap::-webkit-scrollbar{height:3px}
+.svc-track-wrap::-webkit-scrollbar-track{background:rgba(61,219,90,.05)}
+.svc-track-wrap::-webkit-scrollbar-thumb{background:rgba(61,219,90,.3);border-radius:2px}
+.svc-track{display:flex;gap:20px;width:max-content}
+.svc-card{width:310px;flex-shrink:0;background:rgba(255,255,255,.025);border:1px solid rgba(61,219,90,.1);border-radius:10px;padding:40px 32px;position:relative;overflow:hidden;transition:all .4s var(--ease)}
+.svc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--grass),transparent);transform:scaleX(0);transition:transform .4s var(--ease)}
+.svc-card:hover{border-color:rgba(61,219,90,.3);transform:translateY(-8px);box-shadow:0 24px 64px rgba(0,0,0,.6),0 0 40px rgba(61,219,90,.07),inset 0 0 40px rgba(61,219,90,.03)}
+.svc-card:hover::before{transform:scaleX(1)}
+.svc-glow{position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(61,219,90,.12),transparent 70%);border-radius:50%;opacity:0;transition:opacity .4s}
+.svc-card:hover .svc-glow{opacity:1}
+.svc-ico{font-size:2.2rem;margin-bottom:24px;display:block;transition:transform .4s var(--ease)}
+.svc-card:hover .svc-ico{transform:scale(1.2) rotate(-8deg)}
+.svc-card h3{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;color:var(--cream)}
+.svc-card p{font-size:.85rem;color:rgba(238,233,220,.45);line-height:1.75;margin-bottom:24px}
+.svc-pr{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;color:var(--grass);letter-spacing:.04em}
+
+/* ── CINEMATIC MOWER SECTION ── */
+#cinema{padding:0;position:relative;overflow:hidden;height:80vh;min-height:500px;display:flex;align-items:center;background:var(--g0)}
+#cinema-canvas{position:absolute;inset:0;width:100%;height:100%}
+.cinema-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(4,16,10,.9) 0%,rgba(4,16,10,.4) 50%,rgba(4,16,10,.9) 100%),linear-gradient(to bottom,rgba(4,16,10,.6) 0%,transparent 30%,transparent 70%,rgba(4,16,10,.8) 100%);pointer-events:none;z-index:1}
+.cinema-content{position:relative;z-index:2;padding:0 60px;max-width:620px}
+.cinema-content h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,7vw,6.5rem);line-height:.88;letter-spacing:.02em;margin-bottom:20px}
+.cinema-content p{font-size:.95rem;color:rgba(238,233,220,.5);line-height:1.75;max-width:420px;margin-bottom:40px}
+.pill-list{display:flex;flex-direction:column;gap:12px}
+.pill{display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(61,219,90,.05);border:1px solid rgba(61,219,90,.12);border-radius:8px;transition:all .3s;font-size:.85rem}
+.pill:hover{background:rgba(61,219,90,.1);border-color:rgba(61,219,90,.3);transform:translateX(6px)}
+.pill-dot{width:8px;height:8px;background:var(--grass);border-radius:50%;flex-shrink:0;box-shadow:0 0 8px var(--grass)}
+.pill strong{color:var(--cream);font-weight:600}
+.pill span{color:rgba(238,233,220,.45)}
+
+/* ── TESTIMONIALS ── */
+#reviews{padding:120px 60px;background:var(--g0)}
+.reviews-inner{max-width:1280px;margin:0 auto}
+.rev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;margin-top:60px}
+.rev-card{background:rgba(255,255,255,.02);border:1px solid rgba(238,233,220,.06);border-radius:10px;padding:36px;position:relative;overflow:hidden;transition:all .4s var(--ease)}
+.rev-card::after{content:'❝';position:absolute;bottom:-10px;right:20px;font-size:6rem;color:rgba(61,219,90,.05);font-family:serif;line-height:1}
+.rev-card:hover{border-color:rgba(61,219,90,.2);box-shadow:0 16px 48px rgba(0,0,0,.5);transform:translateY(-4px)}
+.rev-stars{color:var(--gold);letter-spacing:3px;margin-bottom:18px;font-size:.9rem}
+.rev-text{font-size:.88rem;color:rgba(238,233,220,.6);line-height:1.8;font-style:italic;margin-bottom:24px}
+.rev-person{display:flex;align-items:center;gap:12px}
+.rev-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--g3),var(--dim));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:var(--bright);border:1px solid rgba(61,219,90,.2)}
+.rev-name{font-weight:600;font-size:.88rem;margin-bottom:2px}
+.rev-loc{font-size:.75rem;color:rgba(238,233,220,.3)}
+
+/* ── NUMBER STRIP ── */
+.num-strip{padding:80px 60px;background:linear-gradient(135deg,var(--g1),var(--g2));border-top:1px solid rgba(61,219,90,.08);border-bottom:1px solid rgba(61,219,90,.08)}
+.num-strip-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-around;flex-wrap:wrap;gap:40px}
+.num-block{text-align:center}
+.num-big{font-family:'Bebas Neue',sans-serif;font-size:5rem;line-height:1;color:var(--cream)}
+.num-big em{color:var(--grass);font-style:normal}
+.num-lbl{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(238,233,220,.35);margin-top:8px}
+
+/* ── CTA ── */
+#contact{position:relative;padding:160px 60px;overflow:hidden;text-align:center;background:var(--g0)}
+#cta-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cta-inner{position:relative;z-index:2;max-width:800px;margin:0 auto}
+.cta-inner h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,9vw,8rem);line-height:.88;letter-spacing:.02em;margin-bottom:20px}
+.cta-inner h2 em{color:var(--grass);font-style:normal;display:block;text-shadow:0 0 80px rgba(61,219,90,.4)}
+.cta-inner p{font-size:1rem;color:rgba(238,233,220,.45);line-height:1.75;max-width:460px;margin:0 auto 52px}
+.btn-mega{display:inline-flex;align-items:center;gap:14px;padding:20px 56px;background:var(--grass);color:var(--g0);font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.1em;text-decoration:none;border-radius:3px;transition:all .3s;position:relative;overflow:hidden}
+.btn-mega::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transform:translateX(-100%);transition:transform .6s}
+.btn-mega:hover::before{transform:translateX(100%)}
+.btn-mega:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(61,219,90,.6)}
+.cta-chips{display:flex;justify-content:center;flex-wrap:wrap;gap:24px;margin-top:40px}
+.chip{font-size:.82rem;color:rgba(238,233,220,.35);display:flex;align-items:center;gap:8px}
+.chip::before{content:'';width:5px;height:5px;background:rgba(61,219,90,.5);border-radius:50%}
+
+/* ── FOOTER ── */
+footer{background:#020A04;padding:44px 60px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;border-top:1px solid rgba(61,219,90,.07)}
+.f-logo{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:.12em;color:var(--cream)}
+.f-logo em{color:var(--grass);font-style:normal}
+footer p{font-size:.75rem;color:rgba(238,233,220,.2)}
+.f-links{display:flex;gap:28px}
+.f-links a{font-size:.75rem;color:rgba(238,233,220,.2);text-decoration:none;transition:color .2s;letter-spacing:.06em}
+.f-links a:hover{color:var(--grass)}
+
+/* ── REVEAL ── */
+.reveal{opacity:0;transform:translateY(50px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.reveal.on{opacity:1;transform:translateY(0)}
+.rd1{transition-delay:.1s}.rd2{transition-delay:.2s}.rd3{transition-delay:.3s}.rd4{transition-delay:.4s}.rd5{transition-delay:.5s}.rd6{transition-delay:.6s}
+
+@media(max-width:900px){
+  nav{padding:16px 24px}
+  nav.stuck{padding:12px 24px}
+  .n-links{display:none}
+  .hero-content,.svc-head,.cinema-content,#reviews,#contact,footer,.num-strip,.svc-track-wrap{padding-left:24px;padding-right:24px}
+  .h-stats{gap:24px;flex-wrap:wrap}
+  .svc-track-wrap{padding:0 24px 32px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">GreenCut Pro</div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="lbar"></div></div>
+  <div class="loader-pct" id="lpct">0%</div>
+</div>
+
+<!-- CURSOR -->
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="n-logo">Green<em>Cut</em> Pro</a>
+  <ul class="n-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#cinema">Why Us</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="n-cta"><span>Free Quote →</span></a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="three-canvas"></canvas>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="h-tag"><span class="h-pulse"></span>Now Booking · Summer 2025</div>
+    <div class="h-title">
+      <span class="h-word w1">YOUR</span>
+      <span class="h-word w2 green">LAWN,</span>
+      <span class="h-word w3">OUR</span>
+      <span class="h-word w4">CRAFT.</span>
+    </div>
+    <p class="h-sub">Precision lawn care that transforms your outdoor space into something your whole street will envy. We show up, we cut clean, we leave nothing behind.</p>
+    <div class="h-btns">
+      <a href="#contact" class="btn-a">Get a Free Quote <span>→</span></a>
+      <a href="#services" class="btn-b">View Services</a>
+    </div>
+    <div class="h-stats">
+      <div><div class="stat-n"><span class="counter" data-t="500">0</span><em>+</em></div><div class="stat-l">Happy Clients</div></div>
+      <div><div class="stat-n"><span class="counter" data-t="8">0</span><em> Yrs</em></div><div class="stat-l">In Business</div></div>
+      <div><div class="stat-n">4.9<em>★</em></div><div class="stat-l">Avg Rating</div></div>
+      <div><div class="stat-n"><span class="counter" data-t="12">0</span><em>k+</em></div><div class="stat-l">Lawns Cut</div></div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="m-item">✓ Licensed &amp; Insured <span class="m-sep"></span></span>
+    <span class="m-item">✓ Same-Week Bookings <span class="m-sep"></span></span>
+    <span class="m-item">✓ Satisfaction Guaranteed <span class="m-sep"></span></span>
+    <span class="m-item">✓ No Hidden Fees <span class="m-sep"></span></span>
+    <span class="m-item">✓ Eco-Friendly Options <span class="m-sep"></span></span>
+    <span class="m-item">✓ 24hr Response <span class="m-sep"></span></span>
+    <span class="m-item">✓ Licensed &amp; Insured <span class="m-sep"></span></span>
+    <span class="m-item">✓ Same-Week Bookings <span class="m-sep"></span></span>
+    <span class="m-item">✓ Satisfaction Guaranteed <span class="m-sep"></span></span>
+    <span class="m-item">✓ No Hidden Fees <span class="m-sep"></span></span>
+    <span class="m-item">✓ Eco-Friendly Options <span class="m-sep"></span></span>
+    <span class="m-item">✓ 24hr Response <span class="m-sep"></span></span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="svc-head">
+    <div class="eyebrow reveal">What We Do</div>
+    <h2 class="section-title reveal rd1">Services Built<br>For Every Lawn</h2>
+    <p class="section-body reveal rd2">Drag to explore. From single mows to full-season care plans — tailored to your turf.</p>
+  </div>
+  <div class="svc-track-wrap" id="svcScroll">
+    <div class="svc-track">
+      <div class="svc-card reveal rd1"><div class="svc-glow"></div><span class="svc-ico">🌿</span><h3>Lawn Mowing</h3><p>Precision cuts at the ideal height for your grass. We edge every border, blow every clipping, and leave zero trace.</p><div class="svc-pr">From $45 / visit</div></div>
+      <div class="svc-card reveal rd2"><div class="svc-glow"></div><span class="svc-ico">✂️</span><h3>Edging & Trimming</h3><p>Razor-crisp lines along every path, driveway, and garden bed — the difference between good and great.</p><div class="svc-pr">From $30 add-on</div></div>
+      <div class="svc-card reveal rd3"><div class="svc-glow"></div><span class="svc-ico">🍂</span><h3>Leaf Removal</h3><p>Full-season cleanouts that protect your lawn going into winter and keep your property sharp year-round.</p><div class="svc-pr">From $80 / service</div></div>
+      <div class="svc-card reveal rd4"><div class="svc-glow"></div><span class="svc-ico">💧</span><h3>Fertilising & Weed Control</h3><p>Targeted applications that thicken turf, crowd out weeds, and keep your lawn deep and lush all season.</p><div class="svc-pr">From $120 / treatment</div></div>
+      <div class="svc-card reveal rd5"><div class="svc-glow"></div><span class="svc-ico">🌱</span><h3>Aeration & Seeding</h3><p>Deep core aeration followed by premium overseeding. Thicker, more resilient grass that handles everything.</p><div class="svc-pr">From $150 / service</div></div>
+      <div class="svc-card reveal rd6"><div class="svc-glow"></div><span class="svc-ico">📅</span><h3>Seasonal Packages</h3><p>Lock in the whole season and save. Spring prep through winter wind-down — fully managed for you.</p><div class="svc-pr">From $299 / season</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CINEMATIC WHY US -->
+<section id="cinema">
+  <canvas id="cinema-canvas"></canvas>
+  <div class="cinema-overlay"></div>
+  <div class="cinema-content">
+    <div class="eyebrow reveal">Why Choose Us</div>
+    <h2 class="section-title reveal rd1" style="font-family:'Bebas Neue',sans-serif;letter-spacing:.02em">Lawn Care<br><span style="color:var(--grass)">Done Right</span><br>Every Time.</h2>
+    <p class="reveal rd2">We're not a faceless company. We're your neighbours — and we treat every single lawn like it's our own.</p>
+    <div class="pill-list">
+      <div class="pill reveal rd2"><span class="pill-dot"></span><div><strong>Always On Time</strong> <span>— tight scheduling windows, every visit</span></div></div>
+      <div class="pill reveal rd3"><span class="pill-dot"></span><div><strong>Pro Equipment</strong> <span>— commercial-grade, serviced regularly</span></div></div>
+      <div class="pill reveal rd4"><span class="pill-dot"></span><div><strong>Fully Insured</strong> <span>— complete public liability coverage</span></div></div>
+      <div class="pill reveal rd5"><span class="pill-dot"></span><div><strong>Transparent Pricing</strong> <span>— you know before we start</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- NUMBER STRIP -->
+<div class="num-strip">
+  <div class="num-strip-inner">
+    <div class="num-block reveal"><div class="num-big"><span class="counter" data-t="500">0</span><em>+</em></div><div class="num-lbl">Happy Clients</div></div>
+    <div class="num-block reveal rd1"><div class="num-big"><span class="counter" data-t="8">0</span><em> Years</em></div><div class="num-lbl">In Business</div></div>
+    <div class="num-block reveal rd2"><div class="num-big"><span class="counter" data-t="12">0</span><em>K+</em></div><div class="num-lbl">Lawns Serviced</div></div>
+    <div class="num-block reveal rd3"><div class="num-big">4.9<em>★</em></div><div class="num-lbl">Average Rating</div></div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="reviews-inner">
+    <div class="eyebrow reveal">Client Stories</div>
+    <h2 class="section-title reveal rd1">Real Lawns.<br>Real Results.</h2>
+    <div class="rev-grid">
+      <div class="rev-card reveal rd1"><div class="rev-stars">★★★★★</div><p class="rev-text">"GreenCut Pro completely transformed our front yard. They arrive like clockwork, the edges are always immaculate, and they leave no mess whatsoever. Genuinely the best lawn service we've ever had."</p><div class="rev-person"><div class="rev-av">SM</div><div><div class="rev-name">Sarah M.</div><div class="rev-loc">Verified Customer · Sydney</div></div></div></div>
+      <div class="rev-card reveal rd2"><div class="rev-stars">★★★★★</div><p class="rev-text">"After trying three others, I finally found a team that actually cares about quality. The difference is night and day — my lawn genuinely looks like a golf course. I get compliments from neighbours constantly."</p><div class="rev-person"><div class="rev-av">JT</div><div><div class="rev-name">James T.</div><div class="rev-loc">Verified Customer · Parramatta</div></div></div></div>
+      <div class="rev-card reveal rd3"><div class="rev-stars">★★★★★</div><p class="rev-text">"Super professional, great communication, and the lawn has genuinely never looked better in eight years. Got the seasonal package and it's been worth every cent. Cannot recommend highly enough."</p><div class="rev-person"><div class="rev-av">RK</div><div><div class="rev-name">Rachel K.</div><div class="rev-loc">Verified Customer · Chatswood</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="contact">
+  <canvas id="cta-canvas"></canvas>
+  <div class="cta-inner">
+    <div class="eyebrow reveal">Get Started</div>
+    <h2 class="reveal rd1">Ready For<br><em>The Best Lawn</em><br>On The Street?</h2>
+    <p class="reveal rd2">Free quote, no obligation. We'll assess your yard and have a plan ready within 24 hours.</p>
+    <a href="tel:0400000000" class="btn-mega reveal rd3">📞 Call: 0400 000 000</a>
+    <div class="cta-chips reveal rd4">
+      <span class="chip">hello@greencutpro.com.au</span>
+      <span class="chip">Serving Greater Sydney</span>
+      <span class="chip">Mon–Sat, 7am–6pm</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo">Green<em>Cut</em> Pro</div>
+  <p>© 2025 GreenCut Pro. All rights reserved.</p>
+  <div class="f-links"><a href="#">Privacy</a><a href="#">Terms</a><a href="#contact">Contact</a></div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ══════════════════════════════════════
+// LOADER
+// ══════════════════════════════════════
+(function(){
+  const bar=document.getElementById('lbar'),pct=document.getElementById('lpct'),loader=document.getElementById('loader');
+  let p=0;
+  const iv=setInterval(()=>{
+    p+=Math.random()*4+1;
+    if(p>=100){p=100;clearInterval(iv);setTimeout(()=>loader.classList.add('hide'),400)}
+    bar.style.width=p+'%';pct.textContent=Math.floor(p)+'%';
+  },40);
+})();
+
+// ══════════════════════════════════════
+// CURSOR
+// ══════════════════════════════════════
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0,tx=0,ty=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function raf(){
+  rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';
+  requestAnimationFrame(raf);
+})();
+document.querySelectorAll('a,button,.svc-card,.pill,.rev-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('link-hover'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('link-hover'));
+});
+
+// ══════════════════════════════════════
+// NAV SCROLL
+// ══════════════════════════════════════
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('stuck',scrollY>60),{passive:true});
+
+// ══════════════════════════════════════
+// THREE.JS HERO — Interactive grass field + mower trail
+// ══════════════════════════════════════
+(function(){
+  if(typeof THREE==='undefined')return;
+  const canvas=document.getElementById('three-canvas');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setClearColor(0x040F08,1);
+
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,200);
+  camera.position.set(0,6,14);
+  camera.lookAt(0,0,0);
+
+  // Fog
+  scene.fog=new THREE.Fog(0x040F08,18,50);
+
+  // Ground plane
+  const groundGeo=new THREE.PlaneGeometry(60,60,60,60);
+  const groundMat=new THREE.MeshLambertMaterial({color:0x0A1A0C});
+  const ground=new THREE.Mesh(groundGeo,groundMat);
+  ground.rotation.x=-Math.PI/2;
+  ground.position.y=-0.01;
+  scene.add(ground);
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0x112211,1.2));
+  const sun=new THREE.DirectionalLight(0x3DDB5A,0.8);
+  sun.position.set(5,10,5);
+  scene.add(sun);
+  const fill=new THREE.DirectionalLight(0x1A4A20,0.4);
+  fill.position.set(-5,5,-5);
+  scene.add(fill);
+
+  // Grass blades — instanced for performance
+  const BLADE_COUNT=6000;
+  const bladeGeo=new THREE.BufferGeometry();
+  const verts=[];
+  const W=0.06,H_base=0.5,H_var=0.6;
+
+  for(let i=0;i<BLADE_COUNT;i++){
+    const h=H_base+Math.random()*H_var;
+    const lean=(Math.random()-.5)*.3;
+    // 3 triangles per blade (tapered shape)
+    verts.push(-W/2,0,0, W/2,0,0, lean,h,0);
+    verts.push(-W/2,0,0, lean,h,0, -W*0.2,h*.5,0);
+    verts.push( W/2,0,0, W*0.2,h*.5,0, lean,h,0);
+  }
+
+  bladeGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+
+  // Per-instance color variation
+  const colors=[];
+  for(let i=0;i<BLADE_COUNT*3;i++){
+    const g=0.25+Math.random()*.25;
+    colors.push(0.02,g,0.05);
+  }
+  bladeGeo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+
+  const bladeMat=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide});
+  const bladeMesh=new THREE.Mesh(bladeGeo,bladeMat);
+
+  // Scatter blades across ground
+  const dummy=new THREE.Object3D();
+  const positions=[];
+  for(let i=0;i<BLADE_COUNT;i++){
+    const x=(Math.random()-.5)*50;
+    const z=(Math.random()-.5)*50;
+    positions.push(x,0,z);
+  }
+
+  // Use individual meshes approach via instancing workaround
+  // For r128 compatibility, scatter with merged geometry offsets
+  const posAttr=bladeGeo.getAttribute('position');
+  const posArr=posAttr.array;
+  const newPos=new Float32Array(posArr.length);
+  for(let i=0;i<BLADE_COUNT;i++){
+    const bx=positions[i*3],bz=positions[i*3+2];
+    const rot=Math.random()*Math.PI*2;
+    const cos=Math.cos(rot),sin=Math.sin(rot);
+    for(let v=0;v<9;v+=3){
+      const idx=(i*9+v);
+      const lx=posArr[idx],ly=posArr[idx+1],lz=posArr[idx+2];
+      newPos[idx]=bx+lx*cos-lz*sin;
+      newPos[idx+1]=ly;
+      newPos[idx+2]=bz+lx*sin+lz*cos;
+    }
+  }
+  bladeGeo.setAttribute('position',new THREE.Float32BufferAttribute(newPos,3));
+  scene.add(bladeMesh);
+
+  // Mower object
+  const mowerGroup=new THREE.Group();
+  const bodyGeo=new THREE.BoxGeometry(1.2,.5,.9);
+  const bodyMat=new THREE.MeshLambertMaterial({color:0x2ECC71});
+  mowerGroup.add(new THREE.Mesh(bodyGeo,bodyMat));
+  const deckGeo=new THREE.BoxGeometry(1.4,.15,1.1);
+  const deckMat=new THREE.MeshLambertMaterial({color:0x27AE60});
+  const deck=new THREE.Mesh(deckGeo,deckMat);
+  deck.position.y=-.3;
+  mowerGroup.add(deck);
+  // Wheels
+  [[.5,-.25,.4],[-.5,-.25,.4],[.5,-.25,-.4],[-.5,-.25,-.4]].forEach(p=>{
+    const wGeo=new THREE.CylinderGeometry(.15,.15,.12,12);
+    const wMat=new THREE.MeshLambertMaterial({color:0x1a1a1a});
+    const w=new THREE.Mesh(wGeo,wMat);
+    w.rotation.z=Math.PI/2;w.position.set(...p);
+    mowerGroup.add(w);
+  });
+  mowerGroup.position.set(-15,0,0);
+  scene.add(mowerGroup);
+
+  // Cut trail particles
+  const trailGeo=new THREE.BufferGeometry();
+  const TRAIL_MAX=500;
+  const trailPos=new Float32Array(TRAIL_MAX*3);
+  trailGeo.setAttribute('position',new THREE.Float32BufferAttribute(trailPos,3));
+  const trailMat=new THREE.PointsMaterial({color:0x3DDB5A,size:0.08,transparent:true,opacity:.6});
+  const trail=new THREE.Points(trailGeo,trailMat);
+  scene.add(trail);
+  let trailIdx=0;
+
+  // Mouse interaction
+  const mouse=new THREE.Vector2();
+  let targetCamX=0,targetCamZ=14;
+  document.addEventListener('mousemove',e=>{
+    mouse.x=(e.clientX/innerWidth-.5)*2;
+    mouse.y=(e.clientY/innerHeight-.5)*2;
+    targetCamX=mouse.x*3;
+    targetCamZ=14+mouse.y*2;
+  });
+
+  // Mower path
+  let mowerT=0,mowerRow=0,mowerDir=1;
+  const ROWS=8,ROW_STEP=2.5;
+  function getMowerPos(t){
+    const rowZ=-8+mowerRow*ROW_STEP;
+    const x=mowerDir>0?(-20+t*40):( 20-t*40);
+    return{x,z:rowZ};
+  }
+
+  // Grass sway shader — simple JS-driven via time
+  let t=0;
+
+  function resize(){
+    renderer.setSize(canvas.offsetWidth,canvas.offsetHeight);
+    camera.aspect=canvas.offsetWidth/canvas.offsetHeight;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize',resize,{passive:true});
+  resize();
+
+  // Particle field (fireflies)
+  const fpCount=200;
+  const fpGeo=new THREE.BufferGeometry();
+  const fpPos=new Float32Array(fpCount*3);
+  const fpVel=[];
+  for(let i=0;i<fpCount;i++){
+    fpPos[i*3]=(Math.random()-.5)*40;
+    fpPos[i*3+1]=Math.random()*3;
+    fpPos[i*3+2]=(Math.random()-.5)*40;
+    fpVel.push((Math.random()-.5)*.02,(Math.random()*.01+.005),(Math.random()-.5)*.02);
+  }
+  fpGeo.setAttribute('position',new THREE.Float32BufferAttribute(fpPos,3));
+  const fpMat=new THREE.PointsMaterial({color:0x5FEF7A,size:0.08,transparent:true,opacity:.7});
+  scene.add(new THREE.Points(fpGeo,fpMat));
+
+  function animate(){
+    requestAnimationFrame(animate);
+    t+=0.016;
+
+    // Camera follow mouse
+    camera.position.x+=(targetCamX-camera.position.x)*.04;
+    camera.position.z+=(targetCamZ-camera.position.z)*.04;
+    camera.lookAt(0,0,0);
+
+    // Fireflies
+    const fa=fpGeo.getAttribute('position').array;
+    for(let i=0;i<fpCount;i++){
+      fa[i*3]+=fpVel[i*3]+Math.sin(t*.5+i)*0.005;
+      fa[i*3+1]+=fpVel[i*3+1];
+      fa[i*3+2]+=fpVel[i*3+2];
+      if(fa[i*3+1]>4){fa[i*3+1]=0;fa[i*3]=(Math.random()-.5)*40;fa[i*3+2]=(Math.random()-.5)*40}
+    }
+    fpGeo.getAttribute('position').needsUpdate=true;
+
+    // Mower
+    mowerT+=0.004;
+    if(mowerT>1){mowerT=0;mowerRow=(mowerRow+1)%ROWS;mowerDir*=-1}
+    const mp=getMowerPos(mowerT);
+    mowerGroup.position.x=mp.x;
+    mowerGroup.position.z=mp.z;
+    mowerGroup.rotation.y=mowerDir>0?0:Math.PI;
+
+    // Add to trail
+    const ta=trail.geometry.getAttribute('position').array;
+    ta[trailIdx*3]=mp.x;ta[trailIdx*3+1]=0.02;ta[trailIdx*3+2]=mp.z;
+    trailIdx=(trailIdx+1)%TRAIL_MAX;
+    trail.geometry.getAttribute('position').needsUpdate=true;
+
+    renderer.render(scene,camera);
+  }
+  animate();
+})();
+
+// ══════════════════════════════════════
+// CINEMA CANVAS — Advanced mower sim
+// ══════════════════════════════════════
+(function(){
+  const canvas=document.getElementById('cinema-canvas');
+  const ctx=canvas.getContext('2d');
+  let W,H,blades=[],mX=-60,mY=0,mDir=1,mRow=0,cuts=[],clippings=[],t=0;
+  const MW=56,MH=36,MSPD=2,ROWH=38;
+
+  function resize(){
+    W=canvas.width=canvas.offsetWidth;
+    H=canvas.height=canvas.offsetHeight;
+    init();
+  }
+
+  function init(){
+    blades=[];cuts=[];
+    const N=Math.floor(W*H/120);
+    for(let i=0;i<N;i++){
+      blades.push({
+        x:Math.random()*W,y:Math.random()*H,
+        h:28+Math.random()*30,w:1+Math.random()*1.5,
+        sway:Math.random()*Math.PI*2,
+        swaySpd:.008+Math.random()*.016,
+        swayAmt:5+Math.random()*10,
+        hue:95+Math.random()*35,
+        bright:20+Math.random()*20,
+        cut:false
+      });
+    }
+    mX=-MW;mY=H*.15;mDir=1;mRow=0;
+  }
+
+  function spawnClip(x,y){
+    for(let i=0;i<4;i++){
+      clippings.push({
+        x,y,vx:(Math.random()-.5)*4,vy:-Math.random()*3-1,
+        life:1,r:1+Math.random()*2.5,hue:100+Math.random()*30
+      });
+    }
+  }
+
+  function drawMower(x,y,dir){
+    ctx.save();
+    ctx.translate(x+MW/2,y+MH/2);
+    if(dir<0)ctx.scale(-1,1);
+
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,.4)';
+    ctx.beginPath();ctx.ellipse(0,MH/2+6,MW*.45,8,0,0,Math.PI*2);ctx.fill();
+
+    // Deck bottom
+    ctx.fillStyle='#1a7a35';
+    ctx.beginPath();ctx.roundRect(-MW/2,MH*.1,MW,MH*.5,4);ctx.fill();
+
+    // Body
+    const bg=ctx.createLinearGradient(0,-MH/2,0,MH/2);
+    bg.addColorStop(0,'#4ECC50');bg.addColorStop(1,'#27A040');
+    ctx.fillStyle=bg;
+    ctx.beginPath();ctx.roundRect(-MW/2+2,-MH/2+2,MW-4,MH-4,6);ctx.fill();
+
+    // Highlight
+    ctx.fillStyle='rgba(255,255,255,.12)';
+    ctx.beginPath();ctx.roundRect(-MW/2+4,-MH/2+4,MW-8,MH*.35,4);ctx.fill();
+
+    // Engine detail
+    ctx.fillStyle='rgba(0,0,0,.2)';
+    ctx.beginPath();ctx.roundRect(-8,-MH/2+6,16,8,2);ctx.fill();
+
+    // Handle
+    ctx.strokeStyle='#888';ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(MW*.4,-MH*.15);ctx.lineTo(MW*.5+10,-MH*.45);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(MW*.5+10,-MH*.45);ctx.lineTo(MW*.5+12,-MH*.2);ctx.stroke();
+
+    // Wheels
+    [[-MW*.4,MH*.35],[MW*.4,MH*.35],[-MW*.4,-MH*.2],[MW*.4,-MH*.2]].forEach(([wx,wy])=>{
+      ctx.fillStyle='#111';ctx.beginPath();ctx.ellipse(wx,wy,7,7,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#333';ctx.beginPath();ctx.ellipse(wx,wy,4,4,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#555';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(wx,wy,6,6,0,0,Math.PI*2);ctx.stroke();
+    });
+
+    // Exhaust puff
+    if(Math.random()<.3){
+      ctx.fillStyle='rgba(200,200,200,.08)';
+      ctx.beginPath();ctx.ellipse(-MW*.45+Math.random()*6,-MH*.3-Math.random()*8,4,4,0,0,Math.PI*2);ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    // Night lawn bg
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#020B04');bg.addColorStop(1,'#060F07');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+    // Row stripes
+    for(let c of cuts){
+      ctx.fillStyle='rgba(8,20,10,.8)';
+      ctx.fillRect(c.x,c.y,c.w,c.h);
+    }
+
+    t+=.016;
+
+    // Grass
+    for(let b of blades){
+      if(b.cut)continue;
+      b.sway+=b.swaySpd;
+      const sw=Math.sin(b.sway)*b.swayAmt;
+      const g=ctx.createLinearGradient(b.x,b.y,b.x+sw,b.y-b.h);
+      g.addColorStop(0,`hsla(${b.hue},55%,10%,.8)`);
+      g.addColorStop(.5,`hsla(${b.hue},65%,${b.bright}%,.75)`);
+      g.addColorStop(1,`hsla(${b.hue},75%,${b.bright+15}%,.5)`);
+      ctx.strokeStyle=g;ctx.lineWidth=b.w;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(b.x,b.y);
+      ctx.quadraticCurveTo(b.x+sw*.5,b.y-b.h*.5,b.x+sw,b.y-b.h);
+      ctx.stroke();
+    }
+
+    // Move mower
+    mX+=MSPD*mDir;
+    for(let b of blades){
+      if(!b.cut&&b.x>mX-4&&b.x<mX+MW+4&&b.y>mY-4&&b.y<mY+MH+4){
+        b.cut=true;
+        if(Math.random()<.1)spawnClip(b.x,b.y);
+      }
+    }
+    if(mDir>0&&mX>W+MW){
+      cuts.push({x:0,y:mY,w:W,h:MH+4});
+      mRow++;mY+=ROWH;mDir=-1;mX=W+MW;
+      if(mY>H+MH){init()}
+    } else if(mDir<0&&mX<-MW){
+      cuts.push({x:0,y:mY,w:W,h:MH+4});
+      mRow++;mY+=ROWH;mDir=1;mX=-MW;
+      if(mY>H+MH){init()}
+    }
+
+    // Clippings
+    for(let i=clippings.length-1;i>=0;i--){
+      const c=clippings[i];c.x+=c.vx;c.y+=c.vy;c.vy+=.12;c.life-=.018;
+      if(c.life<=0){clippings.splice(i,1);continue}
+      ctx.fillStyle=`hsla(${c.hue},70%,45%,${c.life*.8})`;
+      ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.vx);
+      ctx.beginPath();ctx.ellipse(0,0,c.r,c.r*.4,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+
+    drawMower(mX,mY,mDir);
+
+    // Vignette
+    const vig=ctx.createRadialGradient(W/2,H/2,H*.1,W/2,H/2,H*.8);
+    vig.addColorStop(0,'transparent');vig.addColorStop(1,'rgba(0,0,0,.75)');
+    ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+
+    requestAnimationFrame(frame);
+  }
+
+  const obs=new IntersectionObserver(e=>{if(e[0].isIntersecting){resize();frame();obs.disconnect()}},{threshold:.15});
+  obs.observe(canvas);
+  window.addEventListener('resize',resize,{passive:true});
+})();
+
+// ══════════════════════════════════════
+// CTA CANVAS — Animated constellation
+// ══════════════════════════════════════
+(function(){
+  const cv=document.getElementById('cta-canvas');
+  const cx=cv.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;init()}
+  function init(){pts=[];for(let i=0;i<150;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,r:.8+Math.random()*1.5})}
+  function draw(){
+    cx.clearRect(0,0,W,H);cx.fillStyle='rgba(4,16,10,.96)';cx.fillRect(0,0,W,H);
+    for(let p of pts){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+      cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fillStyle='rgba(61,219,90,.35)';cx.fill();
+    }
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
+      if(d<130){cx.beginPath();cx.moveTo(pts[i].x,pts[i].y);cx.lineTo(pts[j].x,pts[j].y);cx.strokeStyle=`rgba(61,219,90,${.07*(1-d/130)})`;cx.lineWidth=.8;cx.stroke()}
+    }
+    // Radial glow center
+    const rg=cx.createRadialGradient(W/2,H/2,0,W/2,H/2,H*.5);
+    rg.addColorStop(0,'rgba(61,219,90,.04)');rg.addColorStop(1,'transparent');
+    cx.fillStyle=rg;cx.fillRect(0,0,W,H);
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize,{passive:true});resize();draw();
+})();
+
+// ══════════════════════════════════════
+// SCROLL REVEAL
+// ══════════════════════════════════════
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('on')});
+},{threshold:.08,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ══════════════════════════════════════
+// COUNTER
+// ══════════════════════════════════════
+document.querySelectorAll('.counter').forEach(el=>{
+  const target=+el.dataset.t;
+  const io=new IntersectionObserver(e=>{
+    if(!e[0].isIntersecting)return;io.disconnect();
+    let s=null;
+    function step(ts){
+      if(!s)s=ts;
+      const p=Math.min((ts-s)/1800,1);
+      const ease=1-Math.pow(1-p,4);
+      el.textContent=Math.floor(ease*target);
+      if(p<1)requestAnimationFrame(step);else el.textContent=target;
+    }
+    requestAnimationFrame(step);
+  },{threshold:.5});
+  io.observe(el);
+});
+
+// ══════════════════════════════════════
+// HORIZONTAL DRAG SCROLL
+// ══════════════════════════════════════
+(function(){
+  const el=document.getElementById('svcScroll');
+  if(!el)return;
+  let down=false,startX,scrollLeft,vel=0,lastX,raf;
+  el.addEventListener('mousedown',e=>{down=true;startX=e.pageX-el.offsetLeft;scrollLeft=el.scrollLeft;lastX=e.pageX;cancelAnimationFrame(raf)});
+  el.addEventListener('mouseleave',()=>{down=false;glide()});
+  el.addEventListener('mouseup',()=>{down=false;glide()});
+  el.addEventListener('mousemove',e=>{
+    if(!down)return;e.preventDefault();
+    vel=e.pageX-lastX;lastX=e.pageX;
+    el.scrollLeft=scrollLeft-(e.pageX-el.offsetLeft-startX);
+  });
+  function glide(){
+    el.scrollLeft-=vel;vel*=.9;
+    if(Math.abs(vel)>.5)raf=requestAnimationFrame(glide);
+  }
+})();
+
+// ══════════════════════════════════════
+// MAGNETIC BUTTONS
+// ══════════════════════════════════════
+document.querySelectorAll('.btn-a,.btn-mega,.n-cta').forEach(btn=>{
+  btn.addEventListener('mousemove',e=>{
+    const r=btn.getBoundingClientRect();
+    const x=e.clientX-r.left-r.width/2;
+    const y=e.clientY-r.top-r.height/2;
+    btn.style.transform=`translate(${x*.2}px,${y*.2}px) translateY(-2px)`;
+  });
+  btn.addEventListener('mouseleave',()=>{btn.style.transform=''});
+});
+</script>
+</body>
+</html>
